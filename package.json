@@ -1,0 +1,230 @@
+{
+  "name": "docker-desktop-lite",
+  "displayName": "Docker Desktop Lite",
+  "description": "A lightweight VS Code extension outline for managing Docker Compose projects and containers.",
+  "version": "0.0.1",
+  "publisher": "local-dev",
+  "icon": "resources/icon.png",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onCommand:dockerDesktopLite.startDocker",
+    "onCommand:dockerDesktopLite.refreshContainers",
+    "onCommand:dockerDesktopLite.openContainerDetails",
+    "onCommand:dockerDesktopLite.confirmDeleteContainer",
+    "onCommand:dockerDesktopLite.openImageDetails",
+    "onCommand:dockerDesktopLite.runImage",
+    "onCommand:dockerDesktopLite.stopImageContainers",
+    "onCommand:dockerDesktopLite.confirmDeleteImage",
+    "onCommand:dockerDesktopLite.openVolumeDetails",
+    "onCommand:dockerDesktopLite.confirmDeleteVolume",
+    "onCommand:dockerDesktopLite.showLogs",
+    "onCommand:dockerDesktopLite.startContainer",
+    "onCommand:dockerDesktopLite.stopContainer",
+    "onCommand:dockerDesktopLite.restartContainer"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "dockerDesktopLite.startDocker",
+        "title": "Start Docker",
+        "shortTitle": "Start",
+        "icon": {
+          "light": "resources/play-green.svg",
+          "dark": "resources/play-green.svg"
+        }
+      },
+      {
+        "command": "dockerDesktopLite.refreshContainers",
+        "title": "Refresh Containers",
+        "shortTitle": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "dockerDesktopLite.showLogs",
+        "title": "Show Container Logs",
+        "shortTitle": "Logs",
+        "icon": "$(output)"
+      },
+      {
+        "command": "dockerDesktopLite.openContainerDetails",
+        "title": "Open Container Details"
+      },
+      {
+        "command": "dockerDesktopLite.confirmDeleteContainer",
+        "title": "Delete Container",
+        "shortTitle": "Delete",
+        "icon": {
+          "light": "resources/trash-red.svg",
+          "dark": "resources/trash-red.svg"
+        }
+      },
+      {
+        "command": "dockerDesktopLite.openImageDetails",
+        "title": "Open Image Details"
+      },
+      {
+        "command": "dockerDesktopLite.runImage",
+        "title": "Run Image",
+        "shortTitle": "Run",
+        "icon": {
+          "light": "resources/play-green.svg",
+          "dark": "resources/play-green.svg"
+        }
+      },
+      {
+        "command": "dockerDesktopLite.stopImageContainers",
+        "title": "Stop Image Containers",
+        "shortTitle": "Stop",
+        "icon": {
+          "light": "resources/stop-red.svg",
+          "dark": "resources/stop-red.svg"
+        }
+      },
+      {
+        "command": "dockerDesktopLite.confirmDeleteImage",
+        "title": "Delete Image",
+        "shortTitle": "Delete",
+        "icon": {
+          "light": "resources/trash-red.svg",
+          "dark": "resources/trash-red.svg"
+        }
+      },
+      {
+        "command": "dockerDesktopLite.openVolumeDetails",
+        "title": "Open Volume Details"
+      },
+      {
+        "command": "dockerDesktopLite.confirmDeleteVolume",
+        "title": "Delete Volume",
+        "shortTitle": "Delete",
+        "icon": {
+          "light": "resources/trash-red.svg",
+          "dark": "resources/trash-red.svg"
+        }
+      },
+      {
+        "command": "dockerDesktopLite.startContainer",
+        "title": "Start Container",
+        "shortTitle": "Start",
+        "icon": {
+          "light": "resources/play-green.svg",
+          "dark": "resources/play-green.svg"
+        }
+      },
+      {
+        "command": "dockerDesktopLite.stopContainer",
+        "title": "Stop Container",
+        "shortTitle": "Stop",
+        "icon": {
+          "light": "resources/stop-red.svg",
+          "dark": "resources/stop-red.svg"
+        }
+      },
+      {
+        "command": "dockerDesktopLite.restartContainer",
+        "title": "Docker Desktop Lite: Restart Container"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dockerDesktopLite",
+          "title": "Docker Lite",
+          "icon": "resources/docker-lite.svg"
+        }
+      ]
+    },
+    "views": {
+      "dockerDesktopLite": [
+        {
+          "id": "dockerDesktopLite.containers",
+          "name": "Containers"
+        }
+      ]
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "dockerDesktopLite.refreshContainers",
+          "when": "view == dockerDesktopLite.containers",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "dockerDesktopLite.startDocker",
+          "when": "view == dockerDesktopLite.containers && viewItem == daemonStopped",
+          "group": "inline@1"
+        },
+        {
+          "command": "dockerDesktopLite.refreshContainers",
+          "when": "view == dockerDesktopLite.containers && viewItem == containerRoot",
+          "group": "inline@1"
+        },
+        {
+          "command": "dockerDesktopLite.startContainer",
+          "when": "view == dockerDesktopLite.containers && viewItem == stoppedContainer",
+          "group": "inline@1"
+        },
+        {
+          "command": "dockerDesktopLite.stopContainer",
+          "when": "view == dockerDesktopLite.containers && viewItem == runningContainer",
+          "group": "inline@1"
+        },
+        {
+          "command": "dockerDesktopLite.showLogs",
+          "when": "view == dockerDesktopLite.containers && (viewItem == runningContainer || viewItem == stoppedContainer)",
+          "group": "inline@3"
+        },
+        {
+          "command": "dockerDesktopLite.confirmDeleteContainer",
+          "when": "view == dockerDesktopLite.containers && (viewItem == runningContainer || viewItem == stoppedContainer)",
+          "group": "inline@4"
+        },
+        {
+          "command": "dockerDesktopLite.runImage",
+          "when": "view == dockerDesktopLite.containers && viewItem == stoppedImage",
+          "group": "inline@1"
+        },
+        {
+          "command": "dockerDesktopLite.stopImageContainers",
+          "when": "view == dockerDesktopLite.containers && viewItem == runningImage",
+          "group": "inline@1"
+        },
+        {
+          "command": "dockerDesktopLite.confirmDeleteImage",
+          "when": "view == dockerDesktopLite.containers && (viewItem == runningImage || viewItem == stoppedImage)",
+          "group": "inline@2"
+        },
+        {
+          "command": "dockerDesktopLite.confirmDeleteVolume",
+          "when": "view == dockerDesktopLite.containers && viewItem == volume",
+          "group": "inline@1"
+        },
+        {
+          "command": "dockerDesktopLite.restartContainer",
+          "when": "view == dockerDesktopLite.containers && (viewItem == runningContainer || viewItem == stoppedContainer)",
+          "group": "actions"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.8",
+    "@types/vscode": "^1.90.0",
+    "typescript": "^5.4.5"
+  }
+}
