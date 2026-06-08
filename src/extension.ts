@@ -285,6 +285,7 @@ interface RuntimeOption {
   command: string;
   description: string;
   detail: string;
+  id: string;
   label: string;
   recommended?: boolean;
   setupScript?: string;
@@ -292,11 +293,12 @@ interface RuntimeOption {
 }
 
 async function configureRuntime(containers: ContainerTreeProvider, extensionRoot: string): Promise<void> {
+  const currentRuntimeId = await detectCurrentRuntimeId();
   const picked = await vscode.window.showQuickPick(
     runtimeOptions(extensionRoot).map((runtime) => ({
-      label: runtime.recommended ? `${runtime.label} (Recommended)` : runtime.label,
+      label: formatRuntimeLabel(runtime, currentRuntimeId),
       description: runtime.description,
-      detail: runtime.detail,
+      detail: formatRuntimeDetail(runtime, currentRuntimeId),
       runtime
     })),
     {
@@ -310,6 +312,23 @@ async function configureRuntime(containers: ContainerTreeProvider, extensionRoot
 
   await startRuntime(picked.runtime);
   containers.refresh();
+}
+
+function formatRuntimeLabel(runtime: RuntimeOption, currentRuntimeId: string | undefined): string {
+  const badges = [
+    runtime.recommended ? "Recommended" : undefined,
+    runtime.id === currentRuntimeId ? "Current" : undefined
+  ].filter(Boolean);
+
+  return badges.length > 0 ? `${runtime.label} (${badges.join(", ")})` : runtime.label;
+}
+
+function formatRuntimeDetail(runtime: RuntimeOption, currentRuntimeId: string | undefined): string {
+  if (runtime.id === currentRuntimeId) {
+    return `Current runtime. ${runtime.detail}`;
+  }
+
+  return runtime.detail;
 }
 
 async function startRuntime(runtime: RuntimeOption): Promise<void> {
@@ -380,6 +399,7 @@ function runtimeOptions(extensionRoot: string): RuntimeOption[] {
   if (process.platform === "darwin") {
     return [
       {
+        id: "macos-colima",
         label: "Colima",
         description: "Lightweight Docker runtime",
         detail: "Runs: colima start",
@@ -389,6 +409,7 @@ function runtimeOptions(extensionRoot: string): RuntimeOption[] {
         recommended: true
       },
       {
+        id: "macos-docker-desktop",
         label: "Docker Desktop",
         description: "Official Docker runtime",
         detail: "Runs: open -a Docker",
@@ -402,6 +423,7 @@ function runtimeOptions(extensionRoot: string): RuntimeOption[] {
   if (process.platform === "win32") {
     return [
       {
+        id: "windows-wsl2-docker",
         label: "Docker Engine in WSL2",
         description: "Lightweight WSL2 Docker daemon",
         detail: "Runs: wsl -e sh -lc \"sudo service docker start || sudo systemctl start docker\"",
@@ -412,6 +434,7 @@ function runtimeOptions(extensionRoot: string): RuntimeOption[] {
         recommended: true
       },
       {
+        id: "windows-docker-desktop",
         label: "Docker Desktop",
         description: "Official Docker runtime",
         detail: "Runs: start Docker Desktop",
@@ -425,6 +448,7 @@ function runtimeOptions(extensionRoot: string): RuntimeOption[] {
 
   return [
     {
+      id: "linux-docker-engine",
       label: "Docker Engine",
       description: "Native Linux Docker daemon",
       detail: "Runs: systemctl start docker",
@@ -434,6 +458,7 @@ function runtimeOptions(extensionRoot: string): RuntimeOption[] {
       recommended: true
     },
     {
+      id: "linux-colima",
       label: "Colima",
       description: "Isolated VM-based Docker runtime",
       detail: "Runs: colima start",
@@ -442,6 +467,58 @@ function runtimeOptions(extensionRoot: string): RuntimeOption[] {
       setupScript: script("setup-linux-colima-runtime.sh")
     }
   ];
+}
+
+async function detectCurrentRuntimeId(): Promise<string | undefined> {
+  const context = await currentDockerContext();
+
+  if (process.platform === "darwin") {
+    if (context === "colima") {
+      return "macos-colima";
+    }
+
+    if (isDockerDesktopContext(context)) {
+      return "macos-docker-desktop";
+    }
+
+    return undefined;
+  }
+
+  if (process.platform === "win32") {
+    if (isDockerDesktopContext(context)) {
+      return "windows-docker-desktop";
+    }
+
+    if (context) {
+      return "windows-wsl2-docker";
+    }
+
+    return undefined;
+  }
+
+  if (context === "colima") {
+    return "linux-colima";
+  }
+
+  if (context) {
+    return "linux-docker-engine";
+  }
+
+  return undefined;
+}
+
+async function currentDockerContext(): Promise<string | undefined> {
+  try {
+    const { stdout } = await execFileAsync("docker", ["context", "show"]);
+    const context = stdout.trim();
+    return context.length > 0 ? context : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function isDockerDesktopContext(context: string | undefined): boolean {
+  return context === "desktop-linux" || context === "docker-desktop";
 }
 
 function formatRuntimeCommand(runtime: RuntimeOption): string {
