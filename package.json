@@ -1,6 +1,6 @@
 {
-  "name": "docker-desktop-lite",
-  "displayName": "Docker Desktop Lite",
+  "name": "docklite",
+  "displayName": "Docklite",
   "description": "A lightweight VS Code extension outline for managing Docker Compose projects and containers.",
   "version": "0.0.1",
   "publisher": "local-dev",
@@ -13,55 +13,55 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onCommand:dockerDesktopLite.configureRuntime",
-    "onCommand:dockerDesktopLite.openRuntimeSettings",
-    "onCommand:dockerDesktopLite.refreshContainers",
-    "onCommand:dockerDesktopLite.openContainerDetails",
-    "onCommand:dockerDesktopLite.confirmDeleteContainer",
-    "onCommand:dockerDesktopLite.openImageDetails",
-    "onCommand:dockerDesktopLite.runImage",
-    "onCommand:dockerDesktopLite.stopImageContainers",
-    "onCommand:dockerDesktopLite.confirmDeleteImage",
-    "onCommand:dockerDesktopLite.openVolumeDetails",
-    "onCommand:dockerDesktopLite.confirmDeleteVolume",
-    "onCommand:dockerDesktopLite.showLogs",
-    "onCommand:dockerDesktopLite.startContainer",
-    "onCommand:dockerDesktopLite.stopContainer",
-    "onCommand:dockerDesktopLite.restartContainer"
+    "onCommand:docklite.configureRuntime",
+    "onCommand:docklite.openRuntimeSettings",
+    "onCommand:docklite.refreshContainers",
+    "onCommand:docklite.openContainerDetails",
+    "onCommand:docklite.confirmDeleteContainer",
+    "onCommand:docklite.openImageDetails",
+    "onCommand:docklite.runImage",
+    "onCommand:docklite.stopImageContainers",
+    "onCommand:docklite.confirmDeleteImage",
+    "onCommand:docklite.openVolumeDetails",
+    "onCommand:docklite.confirmDeleteVolume",
+    "onCommand:docklite.showLogs",
+    "onCommand:docklite.startContainer",
+    "onCommand:docklite.stopContainer",
+    "onCommand:docklite.restartContainer"
   ],
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "dockerDesktopLite.configureRuntime",
+        "command": "docklite.configureRuntime",
         "title": "Configure Runtime",
         "shortTitle": "Runtime",
         "icon": "$(settings-gear)"
       },
       {
-        "command": "dockerDesktopLite.openRuntimeSettings",
+        "command": "docklite.openRuntimeSettings",
         "title": "Docklite: Runtime Settings",
         "shortTitle": "Settings",
         "icon": "$(settings)"
       },
       {
-        "command": "dockerDesktopLite.refreshContainers",
+        "command": "docklite.refreshContainers",
         "title": "Refresh Containers",
         "shortTitle": "Refresh",
         "icon": "$(refresh)"
       },
       {
-        "command": "dockerDesktopLite.showLogs",
+        "command": "docklite.showLogs",
         "title": "Show Container Logs",
         "shortTitle": "Logs",
         "icon": "$(output)"
       },
       {
-        "command": "dockerDesktopLite.openContainerDetails",
+        "command": "docklite.openContainerDetails",
         "title": "Open Container Details"
       },
       {
-        "command": "dockerDesktopLite.confirmDeleteContainer",
+        "command": "docklite.confirmDeleteContainer",
         "title": "Delete Container",
         "shortTitle": "Delete",
         "icon": {
@@ -70,11 +70,11 @@
         }
       },
       {
-        "command": "dockerDesktopLite.openImageDetails",
+        "command": "docklite.openImageDetails",
         "title": "Open Image Details"
       },
       {
-        "command": "dockerDesktopLite.runImage",
+        "command": "docklite.runImage",
         "title": "Run Image",
         "shortTitle": "Run",
         "icon": {
@@ -83,7 +83,7 @@
         }
       },
       {
-        "command": "dockerDesktopLite.stopImageContainers",
+        "command": "docklite.stopImageContainers",
         "title": "Stop Image Containers",
         "shortTitle": "Stop",
         "icon": {
@@ -92,7 +92,7 @@
         }
       },
       {
-        "command": "dockerDesktopLite.confirmDeleteImage",
+        "command": "docklite.confirmDeleteImage",
         "title": "Delete Image",
         "shortTitle": "Delete",
         "icon": {
@@ -101,11 +101,11 @@
         }
       },
       {
-        "command": "dockerDesktopLite.openVolumeDetails",
+        "command": "docklite.openVolumeDetails",
         "title": "Open Volume Details"
       },
       {
-        "command": "dockerDesktopLite.confirmDeleteVolume",
+        "command": "docklite.confirmDeleteVolume",
         "title": "Delete Volume",
         "shortTitle": "Delete",
         "icon": {
@@ -114,7 +114,7 @@
         }
       },
       {
-        "command": "dockerDesktopLite.startContainer",
+        "command": "docklite.startContainer",
         "title": "Start Container",
         "shortTitle": "Start",
         "icon": {
@@ -123,7 +123,7 @@
         }
       },
       {
-        "command": "dockerDesktopLite.stopContainer",
+        "command": "docklite.stopContainer",
         "title": "Stop Container",
         "shortTitle": "Stop",
         "icon": {
@@ -132,23 +132,23 @@
         }
       },
       {
-        "command": "dockerDesktopLite.restartContainer",
-        "title": "Docker Desktop Lite: Restart Container"
+        "command": "docklite.restartContainer",
+        "title": "Docklite: Restart Container"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "dockerDesktopLite",
-          "title": "Docker Lite",
+          "id": "docklite",
+          "title": "Docklite",
           "icon": "resources/docker-lite.svg"
         }
       ]
     },
     "views": {
-      "dockerDesktopLite": [
+      "docklite": [
         {
-          "id": "dockerDesktopLite.containers",
+          "id": "docklite.containers",
           "name": "Containers"
         }
       ]
@@ -156,28 +156,28 @@
     "configuration": {
       "title": "Docklite",
       "properties": {
-        "dockerDesktopLite.runtime.colimaCpu": {
+        "docklite.runtime.colimaCpu": {
           "type": "number",
           "default": 2,
           "minimum": 1,
           "maximum": 32,
           "description": "CPU count used when Docklite creates a Colima runtime."
         },
-        "dockerDesktopLite.runtime.colimaMemoryGiB": {
+        "docklite.runtime.colimaMemoryGiB": {
           "type": "number",
           "default": 4,
           "minimum": 1,
           "maximum": 128,
           "description": "Memory in GiB used when Docklite creates a Colima runtime."
         },
-        "dockerDesktopLite.runtime.colimaDiskGiB": {
+        "docklite.runtime.colimaDiskGiB": {
           "type": "number",
           "default": 60,
           "minimum": 8,
           "maximum": 2048,
           "description": "Disk size in GiB used when Docklite creates a Colima runtime."
         },
-        "dockerDesktopLite.runtime.colimaVmType": {
+        "docklite.runtime.colimaVmType": {
           "type": "string",
           "default": "auto",
           "enum": [
@@ -187,28 +187,28 @@
           ],
           "description": "VM backend used when Docklite creates a Colima runtime. Auto uses vz on macOS and qemu on Linux."
         },
-        "dockerDesktopLite.runtime.colimaSetupTimeoutSeconds": {
+        "docklite.runtime.colimaSetupTimeoutSeconds": {
           "type": "number",
           "default": 600,
           "minimum": 60,
           "maximum": 3600,
           "description": "Maximum seconds Docklite waits for Colima setup."
         },
-        "dockerDesktopLite.runtime.dockerDesktopTimeoutSeconds": {
+        "docklite.runtime.dockerDesktopTimeoutSeconds": {
           "type": "number",
           "default": 600,
           "minimum": 30,
           "maximum": 3600,
           "description": "Maximum seconds Docklite waits for Docker Desktop to become reachable."
         },
-        "dockerDesktopLite.runtime.dockerEngineTimeoutSeconds": {
+        "docklite.runtime.dockerEngineTimeoutSeconds": {
           "type": "number",
           "default": 120,
           "minimum": 15,
           "maximum": 600,
           "description": "Maximum seconds Docklite waits for Linux Docker Engine to become reachable."
         },
-        "dockerDesktopLite.runtime.wslDockerTimeoutSeconds": {
+        "docklite.runtime.wslDockerTimeoutSeconds": {
           "type": "number",
           "default": 180,
           "minimum": 30,
@@ -220,65 +220,65 @@
     "menus": {
       "view/title": [
         {
-          "command": "dockerDesktopLite.refreshContainers",
-          "when": "view == dockerDesktopLite.containers",
+          "command": "docklite.refreshContainers",
+          "when": "view == docklite.containers",
           "group": "navigation"
         }
       ],
       "view/item/context": [
         {
-          "command": "dockerDesktopLite.configureRuntime",
-          "when": "view == dockerDesktopLite.containers && viewItem == daemonStopped",
+          "command": "docklite.configureRuntime",
+          "when": "view == docklite.containers && viewItem == daemonStopped",
           "group": "inline@1"
         },
         {
-          "command": "dockerDesktopLite.refreshContainers",
-          "when": "view == dockerDesktopLite.containers && viewItem == containerRoot",
+          "command": "docklite.refreshContainers",
+          "when": "view == docklite.containers && viewItem == containerRoot",
           "group": "inline@1"
         },
         {
-          "command": "dockerDesktopLite.startContainer",
-          "when": "view == dockerDesktopLite.containers && viewItem == stoppedContainer",
+          "command": "docklite.startContainer",
+          "when": "view == docklite.containers && viewItem == stoppedContainer",
           "group": "inline@1"
         },
         {
-          "command": "dockerDesktopLite.stopContainer",
-          "when": "view == dockerDesktopLite.containers && viewItem == runningContainer",
+          "command": "docklite.stopContainer",
+          "when": "view == docklite.containers && viewItem == runningContainer",
           "group": "inline@1"
         },
         {
-          "command": "dockerDesktopLite.showLogs",
-          "when": "view == dockerDesktopLite.containers && (viewItem == runningContainer || viewItem == stoppedContainer)",
+          "command": "docklite.showLogs",
+          "when": "view == docklite.containers && (viewItem == runningContainer || viewItem == stoppedContainer)",
           "group": "inline@3"
         },
         {
-          "command": "dockerDesktopLite.confirmDeleteContainer",
-          "when": "view == dockerDesktopLite.containers && (viewItem == runningContainer || viewItem == stoppedContainer)",
+          "command": "docklite.confirmDeleteContainer",
+          "when": "view == docklite.containers && (viewItem == runningContainer || viewItem == stoppedContainer)",
           "group": "inline@4"
         },
         {
-          "command": "dockerDesktopLite.runImage",
-          "when": "view == dockerDesktopLite.containers && viewItem == stoppedImage",
+          "command": "docklite.runImage",
+          "when": "view == docklite.containers && viewItem == stoppedImage",
           "group": "inline@1"
         },
         {
-          "command": "dockerDesktopLite.stopImageContainers",
-          "when": "view == dockerDesktopLite.containers && viewItem == runningImage",
+          "command": "docklite.stopImageContainers",
+          "when": "view == docklite.containers && viewItem == runningImage",
           "group": "inline@1"
         },
         {
-          "command": "dockerDesktopLite.confirmDeleteImage",
-          "when": "view == dockerDesktopLite.containers && (viewItem == runningImage || viewItem == stoppedImage)",
+          "command": "docklite.confirmDeleteImage",
+          "when": "view == docklite.containers && (viewItem == runningImage || viewItem == stoppedImage)",
           "group": "inline@2"
         },
         {
-          "command": "dockerDesktopLite.confirmDeleteVolume",
-          "when": "view == dockerDesktopLite.containers && viewItem == volume",
+          "command": "docklite.confirmDeleteVolume",
+          "when": "view == docklite.containers && viewItem == volume",
           "group": "inline@1"
         },
         {
-          "command": "dockerDesktopLite.restartContainer",
-          "when": "view == dockerDesktopLite.containers && (viewItem == runningContainer || viewItem == stoppedContainer)",
+          "command": "docklite.restartContainer",
+          "when": "view == docklite.containers && (viewItem == runningContainer || viewItem == stoppedContainer)",
           "group": "actions"
         }
       ]

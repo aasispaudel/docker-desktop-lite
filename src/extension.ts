@@ -13,35 +13,35 @@ let output: vscode.OutputChannel;
 const execFileAsync = promisify(execFile);
 
 export function activate(context: vscode.ExtensionContext): void {
-  output = vscode.window.createOutputChannel("Docker Desktop Lite");
+  output = vscode.window.createOutputChannel("Docklite");
   const docker = new DockerClient(output);
   const containers = new ContainerTreeProvider(docker, context.extensionUri);
 
   context.subscriptions.push(output);
   context.subscriptions.push(
-    vscode.window.registerTreeDataProvider("dockerDesktopLite.containers", containers)
+    vscode.window.registerTreeDataProvider("docklite.containers", containers)
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.refreshContainers", () => {
+    vscode.commands.registerCommand("docklite.refreshContainers", () => {
       containers.refresh();
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.configureRuntime", async () => {
+    vscode.commands.registerCommand("docklite.configureRuntime", async () => {
       await configureRuntime(containers, context.extensionUri.fsPath);
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.openRuntimeSettings", () => {
+    vscode.commands.registerCommand("docklite.openRuntimeSettings", () => {
       RuntimeSettingsPanel.open();
     })
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.showLogs", async (item?: ContainerTreeItem) => {
+    vscode.commands.registerCommand("docklite.showLogs", async (item?: ContainerTreeItem) => {
       const container = await getContainerFromCommandArg(item, docker);
       if (!container) {
         return;
@@ -56,7 +56,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.openContainerDetails", async (item?: ContainerTreeItem) => {
+    vscode.commands.registerCommand("docklite.openContainerDetails", async (item?: ContainerTreeItem) => {
       const container = await getContainerFromCommandArg(item, docker);
       if (!container) {
         return;
@@ -67,7 +67,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.confirmDeleteContainer", async (item?: ContainerTreeItem) => {
+    vscode.commands.registerCommand("docklite.confirmDeleteContainer", async (item?: ContainerTreeItem) => {
       const container = await getContainerFromCommandArg(item, docker);
       if (!container) {
         return;
@@ -78,7 +78,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.openImageDetails", async (item?: ImageTreeItem) => {
+    vscode.commands.registerCommand("docklite.openImageDetails", async (item?: ImageTreeItem) => {
       const image = await getImageFromCommandArg(item, docker);
       if (!image) {
         return;
@@ -89,7 +89,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.runImage", async (item?: ImageTreeItem) => {
+    vscode.commands.registerCommand("docklite.runImage", async (item?: ImageTreeItem) => {
       const image = await getImageFromCommandArg(item, docker);
       if (!image) {
         return;
@@ -100,7 +100,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.stopImageContainers", async (item?: ImageTreeItem) => {
+    vscode.commands.registerCommand("docklite.stopImageContainers", async (item?: ImageTreeItem) => {
       const image = await getImageFromCommandArg(item, docker);
       if (!image) {
         return;
@@ -116,7 +116,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.confirmDeleteImage", async (item?: ImageTreeItem) => {
+    vscode.commands.registerCommand("docklite.confirmDeleteImage", async (item?: ImageTreeItem) => {
       const image = await getImageFromCommandArg(item, docker);
       if (!image) {
         return;
@@ -127,7 +127,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.openVolumeDetails", async (item?: VolumeTreeItem) => {
+    vscode.commands.registerCommand("docklite.openVolumeDetails", async (item?: VolumeTreeItem) => {
       const volume = await getVolumeFromCommandArg(item, docker);
       if (!volume) {
         return;
@@ -146,7 +146,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.confirmDeleteVolume", async (item?: VolumeTreeItem) => {
+    vscode.commands.registerCommand("docklite.confirmDeleteVolume", async (item?: VolumeTreeItem) => {
       const volume = await getVolumeFromCommandArg(item, docker);
       if (!volume) {
         return;
@@ -165,7 +165,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.startContainer", async (item?: ContainerTreeItem) => {
+    vscode.commands.registerCommand("docklite.startContainer", async (item?: ContainerTreeItem) => {
       try {
         await runContainerAction(item, docker, "start");
         containers.refresh();
@@ -176,7 +176,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.stopContainer", async (item?: ContainerTreeItem) => {
+    vscode.commands.registerCommand("docklite.stopContainer", async (item?: ContainerTreeItem) => {
       try {
         await runContainerAction(item, docker, "stop");
         containers.refresh();
@@ -187,7 +187,7 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.restartContainer", async (item?: ContainerTreeItem) => {
+    vscode.commands.registerCommand("docklite.restartContainer", async (item?: ContainerTreeItem) => {
       try {
         await runContainerAction(item, docker, "restart");
         containers.refresh();
@@ -351,7 +351,7 @@ async function startRuntime(runtime: RuntimeOption): Promise<void> {
 
   try {
     await execFileAsync(runtime.command, runtime.args);
-    vscode.window.showInformationMessage(`Started ${runtime.label}. Refresh Docker Desktop Lite if Docker is still warming up.`);
+    vscode.window.showInformationMessage(`Started ${runtime.label}. Refresh Docklite if Docker is still warming up.`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     vscode.window.showWarningMessage(`Could not start ${runtime.label}. Run this manually: ${formatRuntimeCommand(runtime)}. ${message}`);
@@ -364,7 +364,7 @@ async function offerRuntimeInstall(runtime: RuntimeOption): Promise<void> {
   }
 
   const accepted = await vscode.window.showWarningMessage(
-    `${runtime.label} is not available on this machine. Docker Desktop Lite can install and start it for you.`,
+    `${runtime.label} is not available on this machine. Docklite can install and start it for you.`,
     { modal: true },
     "Accept and Install"
   );
@@ -398,7 +398,7 @@ function runRuntimeSetupScript(runtime: RuntimeOption): void {
   });
   terminal.show();
   terminal.sendText(formatSetupScriptCommand(runtime));
-  vscode.window.showInformationMessage(`Setting up ${runtime.label}. When setup finishes, refresh Docker Desktop Lite.`);
+  vscode.window.showInformationMessage(`Setting up ${runtime.label}. When setup finishes, refresh Docklite.`);
 }
 
 function runtimeOptions(extensionRoot: string): RuntimeOption[] {

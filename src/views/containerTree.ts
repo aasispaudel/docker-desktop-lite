@@ -171,7 +171,7 @@ class ConfigureRuntimeTreeItem extends vscode.TreeItem {
     this.tooltip = `Choose how to start a Docker-compatible runtime. Recommended: ${recommendedRuntimeLabel()}.`;
     this.iconPath = new vscode.ThemeIcon("settings-gear");
     this.command = {
-      command: "dockerDesktopLite.configureRuntime",
+      command: "docklite.configureRuntime",
       title: "Configure Runtime"
     };
   }
@@ -196,7 +196,7 @@ class ChangeDockerEngineTreeItem extends vscode.TreeItem {
     this.tooltip = "Choose a Docker-compatible runtime for Docklite.";
     this.iconPath = new vscode.ThemeIcon("server-environment");
     this.command = {
-      command: "dockerDesktopLite.configureRuntime",
+      command: "docklite.configureRuntime",
       title: "Change Docker Engine"
     };
   }
@@ -211,7 +211,7 @@ class RuntimeSettingsTreeItem extends vscode.TreeItem {
     this.tooltip = "Configure CPU, memory, disk, and VM backend defaults for runtime setup.";
     this.iconPath = new vscode.ThemeIcon("settings");
     this.command = {
-      command: "dockerDesktopLite.openRuntimeSettings",
+      command: "docklite.openRuntimeSettings",
       title: "Runtime Settings"
     };
   }
@@ -319,7 +319,7 @@ export class VolumeTreeItem extends vscode.TreeItem {
       .join("\n");
     this.iconPath = new vscode.ThemeIcon("database");
     this.command = {
-      command: "dockerDesktopLite.openVolumeDetails",
+      command: "docklite.openVolumeDetails",
       title: "Open Volume Details",
       arguments: [this]
     };
@@ -344,7 +344,7 @@ export class ImageTreeItem extends vscode.TreeItem {
       .join("\n");
     this.iconPath = getStatusIcon(image.running, extensionUri);
     this.command = {
-      command: "dockerDesktopLite.openImageDetails",
+      command: "docklite.openImageDetails",
       title: "Open Image Details",
       arguments: [this]
     };
@@ -392,7 +392,7 @@ export class ContainerTreeItem extends vscode.TreeItem {
 
     this.iconPath = getContainerStatusIcon(container, extensionUri);
     this.command = {
-      command: "dockerDesktopLite.openContainerDetails",
+      command: "docklite.openContainerDetails",
       title: "Open Container Details",
       arguments: [this]
     };

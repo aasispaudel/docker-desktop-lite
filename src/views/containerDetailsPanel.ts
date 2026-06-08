@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 import { ContainerDetails, DockerClient, DockerContainer } from "../lib/dockerClient";
 
 export class ContainerDetailsPanel {
-  private static readonly viewType = "dockerDesktopLite.containerDetails";
+  private static readonly viewType = "docklite.containerDetails";
   private static readonly panels = new Map<string, vscode.WebviewPanel>();
 
   static async open(

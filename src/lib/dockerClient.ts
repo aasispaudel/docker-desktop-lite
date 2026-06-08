@@ -733,7 +733,7 @@ function friendlyDockerErrorMessage(error: unknown, command: string, args: strin
   const dockerCommand = args[0] ?? "command";
 
   if (isDockerUnavailable(error, lower)) {
-    return "Docker is not running or the Docker CLI is unavailable. Start Docker, then refresh Docker Desktop Lite.";
+    return "Docker is not running or the Docker CLI is unavailable. Start Docker, then refresh Docklite.";
   }
 
   const missingEnv = compactMessage.match(/(?:required variable|variable)\s+([A-Z_][A-Z0-9_]*)\s+(?:is missing|missing|is not set)/i)

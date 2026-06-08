@@ -11,7 +11,7 @@ interface RuntimeSettings {
   wslDockerTimeoutSeconds: number;
 }
 
-const CONFIG_SECTION = "dockerDesktopLite.runtime";
+const CONFIG_SECTION = "docklite.runtime";
 
 const DEFAULT_SETTINGS: RuntimeSettings = {
   colimaCpu: 2,
@@ -27,7 +27,7 @@ const DEFAULT_SETTINGS: RuntimeSettings = {
 export class RuntimeSettingsPanel {
   static open(): void {
     const panel = vscode.window.createWebviewPanel(
-      "dockerDesktopLite.runtimeSettings",
+      "docklite.runtimeSettings",
       "Docklite Runtime Settings",
       vscode.ViewColumn.One,
       { enableScripts: true }

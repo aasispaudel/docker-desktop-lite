@@ -43,7 +43,7 @@ docs/demo.gif
 
 A good 20-30 second demo should show:
 
-1. Open the Docker Lite Activity Bar view.
+1. Open the Docklite Activity Bar view.
 2. Expand Containers, Images, and Volumes.
 3. Open a container detail page.
 4. Switch from Info to Logs.
@@ -78,7 +78,7 @@ This extension shells out to `docker`, so it behaves like your terminal Docker s
 
 Docklite can help start or configure a local Docker-compatible runtime from the sidebar:
 
-1. Open the Docker Lite Activity Bar view.
+1. Open the Docklite Activity Bar view.
 2. Expand `Settings`.
 3. Choose `Change Docker Engine`.
 4. Pick the runtime for your platform.
@@ -116,18 +116,18 @@ The settings page only shows options that make sense for the current operating s
 
 Colima resource settings are applied only when Docklite creates or starts a Colima runtime. They do not change Docker Desktop or native Linux Docker Engine resources.
 
-Saved settings are stored as VS Code configuration under `dockerDesktopLite.runtime.*` and passed into setup scripts through `DOCKLITE_*` environment variables.
+Saved settings are stored as VS Code configuration under `docklite.runtime.*` and passed into setup scripts through `DOCKLITE_*` environment variables.
 
 Useful keys:
 
-- `dockerDesktopLite.runtime.colimaCpu`
-- `dockerDesktopLite.runtime.colimaMemoryGiB`
-- `dockerDesktopLite.runtime.colimaDiskGiB`
-- `dockerDesktopLite.runtime.colimaVmType`
-- `dockerDesktopLite.runtime.colimaSetupTimeoutSeconds`
-- `dockerDesktopLite.runtime.dockerDesktopTimeoutSeconds`
-- `dockerDesktopLite.runtime.dockerEngineTimeoutSeconds`
-- `dockerDesktopLite.runtime.wslDockerTimeoutSeconds`
+- `docklite.runtime.colimaCpu`
+- `docklite.runtime.colimaMemoryGiB`
+- `docklite.runtime.colimaDiskGiB`
+- `docklite.runtime.colimaVmType`
+- `docklite.runtime.colimaSetupTimeoutSeconds`
+- `docklite.runtime.dockerDesktopTimeoutSeconds`
+- `docklite.runtime.dockerEngineTimeoutSeconds`
+- `docklite.runtime.wslDockerTimeoutSeconds`
 
 ## Local Development
 
@@ -153,7 +153,7 @@ Run the extension locally:
 
 1. Open this folder in VS Code.
 2. Press `F5`.
-3. In the Extension Development Host window, open the Docker Lite Activity Bar view.
+3. In the Extension Development Host window, open the Docklite Activity Bar view.
 4. If Docker is not running, use `Configure Runtime`.
 5. Use the sidebar to inspect containers, images, and volumes.
 
