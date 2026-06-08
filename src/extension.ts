@@ -6,6 +6,7 @@ import { DockerClient, DockerContainer, DockerImage, DockerVolume } from "./lib/
 import { ContainerTreeProvider, ContainerTreeItem, ImageTreeItem, VolumeTreeItem } from "./views/containerTree";
 import { ContainerDetailsPanel } from "./views/containerDetailsPanel";
 import { ImageDetailsPanel } from "./views/imageDetailsPanel";
+import { RuntimeSettingsPanel, runtimeSettingsEnv } from "./views/runtimeSettingsPanel";
 import { VolumeDetailsPanel } from "./views/volumeDetailsPanel";
 
 let output: vscode.OutputChannel;
@@ -30,6 +31,12 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand("dockerDesktopLite.configureRuntime", async () => {
       await configureRuntime(containers, context.extensionUri.fsPath);
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("dockerDesktopLite.openRuntimeSettings", () => {
+      RuntimeSettingsPanel.open();
     })
   );
 
@@ -379,7 +386,8 @@ function runRuntimeSetupScript(runtime: RuntimeOption): void {
     cwd: path.dirname(runtime.setupScript),
     env: {
       VIRTUAL_ENV: "",
-      PYTHONPATH: ""
+      PYTHONPATH: "",
+      ...runtimeSettingsEnv()
     },
     ...(process.platform === "win32"
       ? {}

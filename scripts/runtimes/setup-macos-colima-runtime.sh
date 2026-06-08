@@ -5,6 +5,7 @@ COLIMA_CPU="${DOCKLITE_COLIMA_CPU:-2}"
 COLIMA_MEMORY="${DOCKLITE_COLIMA_MEMORY:-4}"
 COLIMA_DISK="${DOCKLITE_COLIMA_DISK:-60}"
 COLIMA_TIMEOUT_SECONDS="${DOCKLITE_COLIMA_TIMEOUT_SECONDS:-600}"
+COLIMA_VM_TYPE="${DOCKLITE_COLIMA_VM_TYPE:-auto}"
 COLIMA_PROFILE_DIR="$HOME/.colima/_lima/colima"
 
 log(){ printf "\033[1;34m==>\033[0m %s\n" "$1"; }
@@ -85,6 +86,15 @@ reset_colima(){
 log "Docklite macOS Colima runtime setup"
 [ "$(uname -s)" = "Darwin" ] || fail "This script is for macOS."
 
+if [ "$COLIMA_VM_TYPE" = "auto" ]; then
+  COLIMA_VM_TYPE="vz"
+fi
+
+case "$COLIMA_VM_TYPE" in
+  vz|qemu) ;;
+  *) fail "Unsupported Colima VM backend: $COLIMA_VM_TYPE. Use auto, vz, or qemu." ;;
+esac
+
 has brew || fail "Homebrew is required. Install Homebrew from https://brew.sh, then run this again."
 ok "Homebrew found"
 
@@ -105,14 +115,14 @@ fi
 if colima status 2>/dev/null | grep -qi running; then
   ok "Colima is already running"
 else
-  if ! start_colima "vz"; then
+  if ! start_colima "$COLIMA_VM_TYPE"; then
     warn "Colima did not finish starting cleanly."
     warn "This often happens after an interrupted first run or a partial VM boot."
 
     if reset_colima; then
-      if ! start_colima "vz"; then
-        warn "Colima still did not start with Apple's vz backend."
-        if confirm "Retry with QEMU backend instead?"; then
+      if ! start_colima "$COLIMA_VM_TYPE"; then
+        warn "Colima still did not start with the ${COLIMA_VM_TYPE} backend."
+        if [ "$COLIMA_VM_TYPE" != "qemu" ] && confirm "Retry with QEMU backend instead?"; then
           run colima delete --force >/dev/null 2>&1 || true
           start_colima "qemu" || fail "Colima could not start with QEMU either."
         else

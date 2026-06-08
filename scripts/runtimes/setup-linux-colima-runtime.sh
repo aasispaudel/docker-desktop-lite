@@ -5,6 +5,7 @@ COLIMA_CPU="${DOCKLITE_COLIMA_CPU:-2}"
 COLIMA_MEMORY="${DOCKLITE_COLIMA_MEMORY:-4}"
 COLIMA_DISK="${DOCKLITE_COLIMA_DISK:-60}"
 COLIMA_TIMEOUT_SECONDS="${DOCKLITE_COLIMA_TIMEOUT_SECONDS:-600}"
+COLIMA_VM_TYPE="${DOCKLITE_COLIMA_VM_TYPE:-auto}"
 COLIMA_PROFILE_DIR="$HOME/.colima/_lima/colima"
 
 log(){ printf "\033[1;34m==>\033[0m %s\n" "$1"; }
@@ -47,6 +48,7 @@ run_with_timeout(){
 }
 
 start_colima(){
+  vm_type="$1"
   if [ -d "$COLIMA_PROFILE_DIR" ]; then
     log "Starting existing Colima profile"
     run_with_timeout "$COLIMA_TIMEOUT_SECONDS" colima start
@@ -57,7 +59,7 @@ start_colima(){
       --cpu "$COLIMA_CPU" \
       --memory "$COLIMA_MEMORY" \
       --disk "$COLIMA_DISK" \
-      --vm-type qemu
+      --vm-type "$vm_type"
   fi
 }
 
@@ -84,6 +86,16 @@ reset_colima(){
 log "Docklite Linux Colima runtime setup"
 [ "$(uname -s)" = "Linux" ] || fail "This script is for Linux."
 
+if [ "$COLIMA_VM_TYPE" = "auto" ]; then
+  COLIMA_VM_TYPE="qemu"
+fi
+
+case "$COLIMA_VM_TYPE" in
+  qemu) ;;
+  vz) fail "The vz Colima backend is only available on macOS. Use auto or qemu on Linux." ;;
+  *) fail "Unsupported Colima VM backend: $COLIMA_VM_TYPE. Use auto or qemu." ;;
+esac
+
 has docker || fail "Docker CLI is not installed. Install Docker CLI, then run this again."
 ok "Docker CLI found"
 
@@ -93,12 +105,12 @@ ok "Colima found"
 if colima status 2>/dev/null | grep -qi running; then
   ok "Colima is already running"
 else
-  if ! start_colima; then
+  if ! start_colima "$COLIMA_VM_TYPE"; then
     warn "Colima did not finish starting cleanly."
     warn "This often happens after an interrupted first run or a partial VM boot."
 
     if reset_colima; then
-      start_colima || fail "Colima runtime setup was not completed."
+      start_colima "$COLIMA_VM_TYPE" || fail "Colima runtime setup was not completed."
     else
       fail "Colima runtime setup was not completed."
     fi

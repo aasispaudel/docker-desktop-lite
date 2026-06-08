@@ -14,6 +14,7 @@
   "activationEvents": [
     "onStartupFinished",
     "onCommand:dockerDesktopLite.configureRuntime",
+    "onCommand:dockerDesktopLite.openRuntimeSettings",
     "onCommand:dockerDesktopLite.refreshContainers",
     "onCommand:dockerDesktopLite.openContainerDetails",
     "onCommand:dockerDesktopLite.confirmDeleteContainer",
@@ -36,6 +37,12 @@
         "title": "Configure Runtime",
         "shortTitle": "Runtime",
         "icon": "$(settings-gear)"
+      },
+      {
+        "command": "dockerDesktopLite.openRuntimeSettings",
+        "title": "Docklite: Runtime Settings",
+        "shortTitle": "Settings",
+        "icon": "$(settings)"
       },
       {
         "command": "dockerDesktopLite.refreshContainers",
@@ -145,6 +152,70 @@
           "name": "Containers"
         }
       ]
+    },
+    "configuration": {
+      "title": "Docklite",
+      "properties": {
+        "dockerDesktopLite.runtime.colimaCpu": {
+          "type": "number",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 32,
+          "description": "CPU count used when Docklite creates a Colima runtime."
+        },
+        "dockerDesktopLite.runtime.colimaMemoryGiB": {
+          "type": "number",
+          "default": 4,
+          "minimum": 1,
+          "maximum": 128,
+          "description": "Memory in GiB used when Docklite creates a Colima runtime."
+        },
+        "dockerDesktopLite.runtime.colimaDiskGiB": {
+          "type": "number",
+          "default": 60,
+          "minimum": 8,
+          "maximum": 2048,
+          "description": "Disk size in GiB used when Docklite creates a Colima runtime."
+        },
+        "dockerDesktopLite.runtime.colimaVmType": {
+          "type": "string",
+          "default": "auto",
+          "enum": [
+            "auto",
+            "vz",
+            "qemu"
+          ],
+          "description": "VM backend used when Docklite creates a Colima runtime. Auto uses vz on macOS and qemu on Linux."
+        },
+        "dockerDesktopLite.runtime.colimaSetupTimeoutSeconds": {
+          "type": "number",
+          "default": 600,
+          "minimum": 60,
+          "maximum": 3600,
+          "description": "Maximum seconds Docklite waits for Colima setup."
+        },
+        "dockerDesktopLite.runtime.dockerDesktopTimeoutSeconds": {
+          "type": "number",
+          "default": 600,
+          "minimum": 30,
+          "maximum": 3600,
+          "description": "Maximum seconds Docklite waits for Docker Desktop to become reachable."
+        },
+        "dockerDesktopLite.runtime.dockerEngineTimeoutSeconds": {
+          "type": "number",
+          "default": 120,
+          "minimum": 15,
+          "maximum": 600,
+          "description": "Maximum seconds Docklite waits for Linux Docker Engine to become reachable."
+        },
+        "dockerDesktopLite.runtime.wslDockerTimeoutSeconds": {
+          "type": "number",
+          "default": 180,
+          "minimum": 30,
+          "maximum": 1200,
+          "description": "Maximum seconds Docklite waits for Docker inside WSL2 to become reachable."
+        }
+      }
     },
     "menus": {
       "view/title": [

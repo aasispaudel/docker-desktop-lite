@@ -15,6 +15,7 @@ type DockerLiteTreeItem =
   | ProjectTreeItem
   | SettingsRootTreeItem
   | ChangeDockerEngineTreeItem
+  | RuntimeSettingsTreeItem
   | SpacerTreeItem;
 
 interface RootData {
@@ -74,7 +75,10 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
     }
 
     if (element instanceof SettingsRootTreeItem) {
-      return [new ChangeDockerEngineTreeItem()];
+      return [
+        new ChangeDockerEngineTreeItem(),
+        new RuntimeSettingsTreeItem()
+      ];
     }
 
     if (!this.rootData && !this.loading && !this.loadError) {
@@ -194,6 +198,21 @@ class ChangeDockerEngineTreeItem extends vscode.TreeItem {
     this.command = {
       command: "dockerDesktopLite.configureRuntime",
       title: "Change Docker Engine"
+    };
+  }
+}
+
+class RuntimeSettingsTreeItem extends vscode.TreeItem {
+  constructor() {
+    super("Runtime Settings", vscode.TreeItemCollapsibleState.None);
+
+    this.contextValue = "runtimeSettings";
+    this.description = "resources";
+    this.tooltip = "Configure CPU, memory, disk, and VM backend defaults for runtime setup.";
+    this.iconPath = new vscode.ThemeIcon("settings");
+    this.command = {
+      command: "dockerDesktopLite.openRuntimeSettings",
+      title: "Runtime Settings"
     };
   }
 }
