@@ -13,7 +13,7 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onCommand:dockerDesktopLite.startDocker",
+    "onCommand:dockerDesktopLite.configureRuntime",
     "onCommand:dockerDesktopLite.refreshContainers",
     "onCommand:dockerDesktopLite.openContainerDetails",
     "onCommand:dockerDesktopLite.confirmDeleteContainer",
@@ -32,13 +32,10 @@
   "contributes": {
     "commands": [
       {
-        "command": "dockerDesktopLite.startDocker",
-        "title": "Start Docker",
-        "shortTitle": "Start",
-        "icon": {
-          "light": "resources/play-green.svg",
-          "dark": "resources/play-green.svg"
-        }
+        "command": "dockerDesktopLite.configureRuntime",
+        "title": "Configure Runtime",
+        "shortTitle": "Runtime",
+        "icon": "$(settings-gear)"
       },
       {
         "command": "dockerDesktopLite.refreshContainers",
@@ -159,7 +156,7 @@
       ],
       "view/item/context": [
         {
-          "command": "dockerDesktopLite.startDocker",
+          "command": "dockerDesktopLite.configureRuntime",
           "when": "view == dockerDesktopLite.containers && viewItem == daemonStopped",
           "group": "inline@1"
         },

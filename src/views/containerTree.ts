@@ -4,15 +4,17 @@ import { DockerClient, DockerContainer, DockerImage, DockerStatsSummary, DockerV
 type DockerLiteTreeItem =
   | ContainerRootTreeItem
   | DaemonStatusTreeItem
+  | ConfigureRuntimeTreeItem
   | ImageRootTreeItem
   | ImageTreeItem
   | MessageTreeItem
-  | StartDockerTreeItem
   | VolumeRootTreeItem
   | VolumeTreeItem
   | ContainerTreeItem
   | MetricTreeItem
   | ProjectTreeItem
+  | SettingsRootTreeItem
+  | ChangeDockerEngineTreeItem
   | SpacerTreeItem;
 
 interface RootData {
@@ -71,6 +73,10 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
       return element.containers.map((container) => new ContainerTreeItem(container, this.extensionUri));
     }
 
+    if (element instanceof SettingsRootTreeItem) {
+      return [new ChangeDockerEngineTreeItem()];
+    }
+
     if (!this.rootData && !this.loading && !this.loadError) {
       void this.loadRootData();
     }
@@ -78,8 +84,10 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
     if (this.loadError) {
       return [
         new DaemonStatusTreeItem(false, this.loadError),
-        new StartDockerTreeItem(),
-        new MessageTreeItem("Docker data hidden", "Start Docker; this view will update automatically.", "info")
+        new ConfigureRuntimeTreeItem(),
+        new MessageTreeItem("Docker data hidden", "Start a Docker-compatible runtime, then refresh this view.", "info"),
+        new SpacerTreeItem(),
+        new SettingsRootTreeItem()
       ];
     }
 
@@ -99,7 +107,9 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
       new SpacerTreeItem(),
       new ContainerRootTreeItem(this.rootData.containers),
       new ImageRootTreeItem(this.rootData.images),
-      new VolumeRootTreeItem(this.rootData.volumes)
+      new VolumeRootTreeItem(this.rootData.volumes),
+      new SpacerTreeItem(),
+      new SettingsRootTreeItem()
     ];
   }
 
@@ -137,7 +147,7 @@ class DaemonStatusTreeItem extends vscode.TreeItem {
     super(running ? "Docker daemon running" : "Docker daemon not running", vscode.TreeItemCollapsibleState.None);
 
     this.contextValue = running ? "daemonRunning" : "daemonStopped";
-    this.description = running ? "" : "start Docker";
+    this.description = running ? "" : recommendedRuntimeLabel();
     this.tooltip = running
       ? "Docker daemon is running."
       : ["Docker daemon is not available.", error].filter(Boolean).join("\n");
@@ -148,18 +158,56 @@ class DaemonStatusTreeItem extends vscode.TreeItem {
   }
 }
 
-class StartDockerTreeItem extends vscode.TreeItem {
+class ConfigureRuntimeTreeItem extends vscode.TreeItem {
   constructor() {
-    super("Start Docker", vscode.TreeItemCollapsibleState.None);
+    super("Configure Runtime", vscode.TreeItemCollapsibleState.None);
 
-    this.contextValue = "startDocker";
-    this.tooltip = "Open Docker Desktop, then refresh Docker Desktop Lite.";
-    this.iconPath = new vscode.ThemeIcon("play", new vscode.ThemeColor("testing.iconPassed"));
+    this.contextValue = "configureRuntime";
+    this.description = recommendedRuntimeLabel();
+    this.tooltip = `Choose how to start a Docker-compatible runtime. Recommended: ${recommendedRuntimeLabel()}.`;
+    this.iconPath = new vscode.ThemeIcon("settings-gear");
     this.command = {
-      command: "dockerDesktopLite.startDocker",
-      title: "Start Docker"
+      command: "dockerDesktopLite.configureRuntime",
+      title: "Configure Runtime"
     };
   }
+}
+
+class SettingsRootTreeItem extends vscode.TreeItem {
+  constructor() {
+    super("Settings", vscode.TreeItemCollapsibleState.Collapsed);
+
+    this.contextValue = "settingsRoot";
+    this.tooltip = "Docklite settings";
+    this.iconPath = new vscode.ThemeIcon("settings-gear");
+  }
+}
+
+class ChangeDockerEngineTreeItem extends vscode.TreeItem {
+  constructor() {
+    super("Change Docker Engine", vscode.TreeItemCollapsibleState.None);
+
+    this.contextValue = "changeDockerEngine";
+    this.description = recommendedRuntimeLabel();
+    this.tooltip = "Choose a Docker-compatible runtime for Docklite.";
+    this.iconPath = new vscode.ThemeIcon("server-environment");
+    this.command = {
+      command: "dockerDesktopLite.configureRuntime",
+      title: "Change Docker Engine"
+    };
+  }
+}
+
+function recommendedRuntimeLabel(): string {
+  if (process.platform === "darwin") {
+    return "Colima recommended";
+  }
+
+  if (process.platform === "win32") {
+    return "WSL2 recommended";
+  }
+
+  return "Docker Engine recommended";
 }
 
 class MetricTreeItem extends vscode.TreeItem {
@@ -310,7 +358,7 @@ function formatImageLabel(image: DockerImage): string {
 
 export class ContainerTreeItem extends vscode.TreeItem {
   constructor(readonly container: DockerContainer, extensionUri: vscode.Uri) {
-    super(container.composeService ?? container.name, vscode.TreeItemCollapsibleState.None);
+    super(formatContainerTreeLabel(container), vscode.TreeItemCollapsibleState.None);
 
     this.contextValue = container.state === "running" ? "runningContainer" : "stoppedContainer";
     this.tooltip = [
@@ -332,11 +380,49 @@ export class ContainerTreeItem extends vscode.TreeItem {
   }
 }
 
+function formatContainerTreeLabel(container: DockerContainer): string {
+  if (container.composeProject && container.name.startsWith(`${container.composeProject}-`)) {
+    return container.name.slice(container.composeProject.length + 1);
+  }
+
+  return container.composeService ?? container.name;
+}
+
 function getContainerStatusIcon(
   container: DockerContainer,
   extensionUri: vscode.Uri
-): vscode.Uri {
+): vscode.Uri | vscode.ThemeIcon {
+  if (isContainerLifecyclePending(container)) {
+    return new vscode.ThemeIcon("loading~spin", new vscode.ThemeColor("charts.blue"));
+  }
+
+  if (isContainerHealthStarting(container)) {
+    return vscode.Uri.joinPath(extensionUri, "resources", "status-health-starting.svg");
+  }
+
   return getStatusIcon(container.state === "running", extensionUri);
+}
+
+function isContainerLifecyclePending(container: DockerContainer): boolean {
+  const state = container.state.toLowerCase();
+  const status = container.status.toLowerCase();
+
+  return (
+    state === "created" ||
+    state === "restarting" ||
+    state === "removing" ||
+    state === "starting" ||
+    status.startsWith("created") ||
+    status.startsWith("starting") ||
+    status.includes("restarting")
+  );
+}
+
+function isContainerHealthStarting(container: DockerContainer): boolean {
+  return (
+    container.state.toLowerCase() === "running" &&
+    container.status.toLowerCase().includes("health: starting")
+  );
 }
 
 function getStatusIcon(active: boolean, extensionUri: vscode.Uri): vscode.Uri {

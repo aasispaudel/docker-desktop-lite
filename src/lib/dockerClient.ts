@@ -563,7 +563,9 @@ export class DockerClient {
   async containerDetails(container: DockerContainer): Promise<ContainerDetails> {
     const [inspect, logs, stats] = await Promise.all([
       this.inspect(container.id),
-      this.logs(container.id),
+      this.logs(container.id).catch((error) => (
+        `Unable to load logs: ${error instanceof Error ? error.message : String(error)}`
+      )),
       this.containerStats(container.id)
     ]);
 
@@ -619,6 +621,32 @@ export class DockerClient {
       container.id.startsWith(containerId) ||
       containerId.startsWith(container.id)
     ));
+  }
+
+  async findMatchingContainer(container: DockerContainer): Promise<DockerContainer | undefined> {
+    const containers = await this.listContainers();
+    const idMatch = containers.find((candidate) => (
+      candidate.id === container.id ||
+      candidate.id.startsWith(container.id) ||
+      container.id.startsWith(candidate.id)
+    ));
+
+    if (idMatch) {
+      return idMatch;
+    }
+
+    if (container.composeProject && container.composeService) {
+      const composeMatch = containers.find((candidate) => (
+        candidate.composeProject === container.composeProject &&
+        candidate.composeService === container.composeService
+      ));
+
+      if (composeMatch) {
+        return composeMatch;
+      }
+    }
+
+    return containers.find((candidate) => candidate.name === container.name);
   }
 
   async containerAction(

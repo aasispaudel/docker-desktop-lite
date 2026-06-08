@@ -1,4 +1,5 @@
 import { execFile } from "node:child_process";
+import * as path from "node:path";
 import { promisify } from "node:util";
 import * as vscode from "vscode";
 import { DockerClient, DockerContainer, DockerImage, DockerVolume } from "./lib/dockerClient";
@@ -19,8 +20,6 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.window.registerTreeDataProvider("dockerDesktopLite.containers", containers)
   );
-  const autoRefresh = setInterval(() => containers.refresh(), 5000);
-  context.subscriptions.push({ dispose: () => clearInterval(autoRefresh) });
 
   context.subscriptions.push(
     vscode.commands.registerCommand("dockerDesktopLite.refreshContainers", () => {
@@ -29,10 +28,8 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("dockerDesktopLite.startDocker", async () => {
-      await startDockerDesktop();
-      vscode.window.showInformationMessage("Opening Docker Desktop. Refresh Docker Desktop Lite once Docker finishes starting.");
-      setTimeout(() => containers.refresh(), 5000);
+    vscode.commands.registerCommand("dockerDesktopLite.configureRuntime", async () => {
+      await configureRuntime(containers, context.extensionUri.fsPath);
     })
   );
 
@@ -283,20 +280,202 @@ function formatError(error: unknown): string {
   return error instanceof Error ? error.message : String(error);
 }
 
-async function startDockerDesktop(): Promise<void> {
-  try {
-    if (process.platform === "darwin") {
-      await execFileAsync("open", ["-a", "Docker"]);
-      return;
-    }
+interface RuntimeOption {
+  args: string[];
+  command: string;
+  description: string;
+  detail: string;
+  label: string;
+  recommended?: boolean;
+  setupScript?: string;
+  setupScriptKind?: "powershell" | "shell";
+}
 
-    if (process.platform === "win32") {
-      await execFileAsync("cmd", ["/c", "start", "", "Docker Desktop"]);
-      return;
+async function configureRuntime(containers: ContainerTreeProvider, extensionRoot: string): Promise<void> {
+  const picked = await vscode.window.showQuickPick(
+    runtimeOptions(extensionRoot).map((runtime) => ({
+      label: runtime.recommended ? `${runtime.label} (Recommended)` : runtime.label,
+      description: runtime.description,
+      detail: runtime.detail,
+      runtime
+    })),
+    {
+      placeHolder: "Choose a Docker-compatible runtime to start"
     }
+  );
 
-    await execFileAsync("systemctl", ["--user", "start", "docker-desktop"]);
-  } catch {
-    vscode.window.showWarningMessage("Could not open Docker Desktop automatically. Start Docker manually, then refresh Docker Desktop Lite.");
+  if (!picked) {
+    return;
   }
+
+  await startRuntime(picked.runtime);
+  containers.refresh();
+}
+
+async function startRuntime(runtime: RuntimeOption): Promise<void> {
+  if (runtime.setupScript) {
+    if (await commandExists(runtime.command)) {
+      runRuntimeSetupScript(runtime);
+      return;
+    }
+
+    await offerRuntimeInstall(runtime);
+    return;
+  }
+
+  try {
+    await execFileAsync(runtime.command, runtime.args);
+    vscode.window.showInformationMessage(`Started ${runtime.label}. Refresh Docker Desktop Lite if Docker is still warming up.`);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    vscode.window.showWarningMessage(`Could not start ${runtime.label}. Run this manually: ${formatRuntimeCommand(runtime)}. ${message}`);
+  }
+}
+
+async function offerRuntimeInstall(runtime: RuntimeOption): Promise<void> {
+  if (!runtime.setupScript) {
+    return;
+  }
+
+  const accepted = await vscode.window.showWarningMessage(
+    `${runtime.label} is not available on this machine. Docker Desktop Lite can install and start it for you.`,
+    { modal: true },
+    "Accept and Install"
+  );
+
+  if (accepted !== "Accept and Install") {
+    return;
+  }
+
+  runRuntimeSetupScript(runtime);
+}
+
+function runRuntimeSetupScript(runtime: RuntimeOption): void {
+  if (!runtime.setupScript) {
+    return;
+  }
+
+  const terminal = vscode.window.createTerminal({
+    name: `${runtime.label} setup`,
+    cwd: path.dirname(runtime.setupScript),
+    env: {
+      VIRTUAL_ENV: "",
+      PYTHONPATH: ""
+    },
+    ...(process.platform === "win32"
+      ? {}
+      : {
+          shellPath: "/bin/bash",
+          shellArgs: ["--noprofile", "--norc"]
+        })
+  });
+  terminal.show();
+  terminal.sendText(formatSetupScriptCommand(runtime));
+  vscode.window.showInformationMessage(`Setting up ${runtime.label}. When setup finishes, refresh Docker Desktop Lite.`);
+}
+
+function runtimeOptions(extensionRoot: string): RuntimeOption[] {
+  const script = (name: string) => path.join(extensionRoot, "scripts", "runtimes", name);
+
+  if (process.platform === "darwin") {
+    return [
+      {
+        label: "Colima",
+        description: "Lightweight Docker runtime",
+        detail: "Runs: colima start",
+        command: "colima",
+        args: ["start"],
+        setupScript: script("setup-macos-colima-runtime.sh"),
+        recommended: true
+      },
+      {
+        label: "Docker Desktop",
+        description: "Official Docker runtime",
+        detail: "Runs: open -a Docker",
+        command: "open",
+        args: ["-a", "Docker"],
+        setupScript: script("setup-macos-docker-desktop-runtime.sh")
+      }
+    ];
+  }
+
+  if (process.platform === "win32") {
+    return [
+      {
+        label: "Docker Engine in WSL2",
+        description: "Lightweight WSL2 Docker daemon",
+        detail: "Runs: wsl -e sh -lc \"sudo service docker start || sudo systemctl start docker\"",
+        command: "wsl",
+        args: ["-e", "sh", "-lc", "sudo service docker start || sudo systemctl start docker"],
+        setupScript: script("setup-windows-wsl2-docker-runtime.ps1"),
+        setupScriptKind: "powershell",
+        recommended: true
+      },
+      {
+        label: "Docker Desktop",
+        description: "Official Docker runtime",
+        detail: "Runs: start Docker Desktop",
+        command: "cmd",
+        args: ["/c", "start", "", "Docker Desktop"],
+        setupScript: script("setup-windows-docker-desktop-runtime.ps1"),
+        setupScriptKind: "powershell"
+      },
+    ];
+  }
+
+  return [
+    {
+      label: "Docker Engine",
+      description: "Native Linux Docker daemon",
+      detail: "Runs: systemctl start docker",
+      command: "systemctl",
+      args: ["start", "docker"],
+      setupScript: script("setup-linux-docker-engine-runtime.sh"),
+      recommended: true
+    },
+    {
+      label: "Colima",
+      description: "Isolated VM-based Docker runtime",
+      detail: "Runs: colima start",
+      command: "colima",
+      args: ["start"],
+      setupScript: script("setup-linux-colima-runtime.sh")
+    }
+  ];
+}
+
+function formatRuntimeCommand(runtime: RuntimeOption): string {
+  return [runtime.command, ...runtime.args].join(" ");
+}
+
+async function commandExists(command: string): Promise<boolean> {
+  const lookup = process.platform === "win32" ? "where" : "which";
+  const args = [command];
+
+  try {
+    await execFileAsync(lookup, args);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function formatSetupScriptCommand(runtime: RuntimeOption): string {
+  if (!runtime.setupScript) {
+    return "";
+  }
+
+  if (runtime.setupScriptKind === "powershell") {
+    return `powershell -ExecutionPolicy Bypass -File ${powershellQuote(runtime.setupScript)}`;
+  }
+
+  return `bash ${shellQuote(runtime.setupScript)}`;
+}
+
+function powershellQuote(value: string): string {
+  return `'${value.replace(/'/g, "''")}'`;
+}
+
+function shellQuote(value: string): string {
+  return `'${value.replace(/'/g, "'\\''")}'`;
 }

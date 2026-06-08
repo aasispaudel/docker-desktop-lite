@@ -13,15 +13,17 @@ export class ContainerDetailsPanel {
     showDeleteDialog = false
   ): Promise<void> {
     const panel = this.getOrCreatePanel(container, extensionUri);
-    panel.webview.html = renderLoading(container);
+    let currentContainer = container;
+    panel.webview.html = renderLoading(currentContainer);
     panel.reveal(vscode.ViewColumn.One);
 
     try {
-      const details = await docker.containerDetails(container);
-      panel.title = container.composeService ?? container.name;
+      currentContainer = await resolveCurrentContainer(docker, currentContainer);
+      const details = await docker.containerDetails(currentContainer);
+      panel.title = currentContainer.name;
       panel.webview.html = renderDetails(details, panel.webview, showDeleteDialog);
     } catch (error) {
-      panel.webview.html = renderError(container.composeService ?? container.name, formatError(error));
+      panel.webview.html = renderError(currentContainer.name, formatError(error));
     }
 
     panel.webview.onDidReceiveMessage(async (message: {
@@ -43,30 +45,33 @@ export class ContainerDetailsPanel {
         await vscode.window.showTextDocument(document, { preview: false });
       }
       if (message.command === "refreshLogs") {
-        const logs = await docker.logs(container.id, message.text);
+        currentContainer = await resolveCurrentContainer(docker, currentContainer);
+        const logs = await docker.logs(currentContainer.id, message.text);
         await panel.webview.postMessage({ command: "logs", logs });
       }
       if (message.command === "openShell") {
-        if (container.state !== "running") {
+        currentContainer = await resolveCurrentContainer(docker, currentContainer);
+        if (currentContainer.state !== "running") {
           vscode.window.showWarningMessage("Container must be running before opening an interactive shell.");
           return;
         }
 
         const terminal = vscode.window.createTerminal({
-          name: `${container.composeService ?? container.name} shell`,
+          name: `${currentContainer.name} shell`,
           shellPath: "docker",
-          shellArgs: ["exec", "-it", container.id, "sh"]
+          shellArgs: ["exec", "-it", currentContainer.id, "sh"]
         });
         terminal.show();
       }
       if (message.command === "containerAction" && message.action) {
+        currentContainer = await resolveCurrentContainer(docker, currentContainer);
         if (message.action === "remove") {
           try {
-            await docker.removeContainer(container.id);
+            await docker.removeContainer(currentContainer.id);
             onContainerChanged?.();
             panel.dispose();
           } catch (error) {
-            const freshContainer = await docker.findContainer(container.id);
+            const freshContainer = await docker.findMatchingContainer(currentContainer);
             onContainerChanged?.();
 
             if (!freshContainer) {
@@ -79,18 +84,19 @@ export class ContainerDetailsPanel {
           return;
         }
 
-        await docker.containerAction(message.action, container.id);
+        await docker.containerAction(message.action, currentContainer.id);
         onContainerChanged?.();
 
-        const freshContainer = await docker.findContainer(container.id);
+        const freshContainer = await docker.findMatchingContainer(currentContainer);
         if (!freshContainer) {
           panel.dispose();
           return;
         }
 
+        currentContainer = freshContainer;
         panel.webview.html = renderLoading(freshContainer);
         const freshDetails = await docker.containerDetails(freshContainer);
-        panel.title = freshContainer.composeService ?? freshContainer.name;
+        panel.title = freshContainer.name;
         panel.webview.html = renderDetails(freshDetails, panel.webview);
       }
     });
@@ -108,7 +114,7 @@ export class ContainerDetailsPanel {
 
     const panel = vscode.window.createWebviewPanel(
       this.viewType,
-      container.composeService ?? container.name,
+      container.name,
       vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -122,9 +128,21 @@ export class ContainerDetailsPanel {
   }
 }
 
+async function resolveCurrentContainer(
+  docker: DockerClient,
+  container: DockerContainer
+): Promise<DockerContainer> {
+  const currentContainer = await docker.findMatchingContainer(container);
+  if (!currentContainer) {
+    throw new Error("Container no longer exists in the current Docker context. Refresh Docklite.");
+  }
+
+  return currentContainer;
+}
+
 function renderLoading(container: DockerContainer): string {
   return htmlPage(
-    `<main class="page"><h1>${escapeHtml(container.composeService ?? container.name)}</h1><p>Loading container details...</p></main>`,
+    `<main class="page"><h1>${escapeHtml(container.name)}</h1><p>Loading container details...</p></main>`,
     ""
   );
 }
@@ -168,7 +186,7 @@ function renderDetails(
         <header class="header">
           <div>
             <p class="eyebrow">${escapeHtml(container.composeProject ?? "container")}</p>
-            <h1>${escapeHtml(container.composeService ?? container.name)}</h1>
+            <h1>${escapeHtml(container.name)}</h1>
           </div>
           <div class="status-actions">
             <div>
