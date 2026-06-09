@@ -165,22 +165,10 @@ npm run package
 
 ## Local Testing
 
-You can test against any local Docker project. For a tiny fixture:
+You can test against any local Docker project. For screenshots and demo GIFs, use the included generic fixture so you do not expose real project names or containers:
 
-```yaml
-services:
-  web:
-    image: nginx:alpine
-    ports:
-      - "8080:80"
-
-  redis:
-    image: redis:alpine
 ```
-
-Run it from a separate folder:
-
-```sh
+cd examples/docklite-demo
 docker compose up -d
 ```
 
@@ -195,6 +183,13 @@ Useful manual checks:
 - Open a named volume and browse stored files.
 - Stop Docker and confirm the empty/error state is understandable.
 - Open `Runtime Settings`, change Colima resources, and confirm Configure Runtime passes those values into the setup terminal.
+
+Clean up the demo stack:
+
+```sh
+cd examples/docklite-demo
+docker compose down -v
+```
 
 Runtime setup scripts can also be tested manually:
 
