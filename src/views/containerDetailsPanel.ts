@@ -325,14 +325,15 @@ function renderComposeSection(container: DockerContainer): string {
 }
 
 function composeConfigFilesRow(files: string[]): string {
+  const maskedPath = "conflg/file/path/will/be/shown/here";
   return `
     <div class="info-row">
       <span>Config files</span>
       <div class="file-links">
         ${files
           .map((file) => `
-            <button class="file-link" data-path="${escapeAttribute(file)}" title="Open ${escapeAttribute(file)}">
-              ${escapeHtml(file)}
+            <button class="file-link" data-path="${escapeAttribute(file)}" title="Open config file">
+              ${escapeHtml(maskedPath)}
             </button>
           `)
           .join("")}

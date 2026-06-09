@@ -4,6 +4,9 @@ Docklite is a local-first VS Code extension for inspecting and managing Docker c
 
 It is intentionally small: it wraps the Docker CLI, keeps the UI close to Docker Desktop where it helps, and avoids cloud accounts, background indexing, or heavyweight project tracking.
 
+## Demo
+![Docklite demo](docs/demo.gif)
+
 ## Features
 
 - Activity Bar view for local Docker resources
@@ -23,15 +26,17 @@ It is intentionally small: it wraps the Docker CLI, keeps the UI close to Docker
 
 ## Screenshots
 
-Recommended screenshots to add before sharing:
+### Container Overview
 
-- `docs/screenshots/sidebar.png`: containers, images, and volumes in the Activity Bar view
-- `docs/screenshots/container-info.png`: container Info page with stats and ports
-- `docs/screenshots/logs.png`: fixed logs viewer with toolbar
-- `docs/screenshots/image-run.png`: image run dialog
-- `docs/screenshots/volume-files.png`: volume stored data browser
+Container details with Compose grouping, live stats, port mapping, and quick actions:
 
-After adding those files, link them here with normal Markdown image tags.
+![Docklite container overview](docs/ss1.png)
+
+### Logs Workflow
+
+Fixed logs viewer with the sidebar context still visible for fast navigation:
+
+![Docklite container logs](docs/ss2.png)
 
 ## Demo GIF
 

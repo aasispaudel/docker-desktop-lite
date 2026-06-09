@@ -1,15 +1,34 @@
 {
   "name": "docklite",
   "displayName": "Docklite",
-  "description": "A lightweight VS Code extension outline for managing Docker Compose projects and containers.",
+  "description": "Inspect and manage local Docker containers, images, volumes, and runtimes directly from VS Code.",
   "version": "0.0.1",
   "publisher": "local-dev",
   "icon": "resources/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aasispaudel/docker-desktop-lite.git"
+  },
+  "homepage": "https://github.com/aasispaudel/docker-desktop-lite#readme",
+  "bugs": {
+    "url": "https://github.com/aasispaudel/docker-desktop-lite/issues"
+  },
   "engines": {
     "vscode": "^1.90.0"
   },
   "categories": [
-    "Other"
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "docker",
+    "containers",
+    "images",
+    "volumes",
+    "compose",
+    "colima",
+    "vscode",
+    "developer-tools"
   ],
   "activationEvents": [
     "onStartupFinished",
