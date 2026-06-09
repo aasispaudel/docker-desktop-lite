@@ -38,38 +38,6 @@ Fixed logs viewer with the sidebar context still visible for fast navigation:
 
 ![Docklite container logs](docs/ss2.png)
 
-## Demo GIF
-
-Recommended demo path:
-
-```text
-docs/demo.gif
-```
-
-A good 20-30 second demo should show:
-
-1. Open the Docklite Activity Bar view.
-2. Expand Containers, Images, and Volumes.
-3. Open a container detail page.
-4. Switch from Info to Logs.
-5. Open the Exec tab or shell action.
-6. Open an image and show the Run dialog.
-7. Open a volume and drill into stored data.
-
-Suggested tools:
-
-- macOS: record with QuickTime or CleanShot, then convert/compress with `ffmpeg` or `gifski`
-- Cross-platform: ScreenToGif
-- CLI conversion: `ffmpeg`
-
-Example conversion:
-
-```sh
-ffmpeg -i demo.mov -vf "fps=12,scale=1200:-1:flags=lanczos" -loop 0 docs/demo.gif
-```
-
-Keep the GIF short. A focused demo is better than a huge file that takes forever to load.
-
 ## Requirements
 
 - VS Code 1.90 or newer
