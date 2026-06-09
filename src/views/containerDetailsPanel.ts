@@ -325,7 +325,7 @@ function renderComposeSection(container: DockerContainer): string {
 }
 
 function composeConfigFilesRow(files: string[]): string {
-  const maskedPath = "conflg/file/path/will/be/shown/here";
+  const maskedPath = "/your/config/path/shows/here";
   return `
     <div class="info-row">
       <span>Config files</span>
