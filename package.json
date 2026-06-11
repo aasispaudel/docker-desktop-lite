@@ -2,7 +2,7 @@
   "name": "docklite",
   "displayName": "Docklite",
   "description": "Inspect and manage local Docker containers, images, volumes, and runtimes directly from VS Code.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "asis-paudel",
   "license": "MIT",
   "icon": "resources/icon.png",
