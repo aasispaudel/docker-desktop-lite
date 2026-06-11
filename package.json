@@ -33,6 +33,7 @@
   ],
   "activationEvents": [
     "onStartupFinished",
+    "onCommand:docklite.startDockerRuntime",
     "onCommand:docklite.configureRuntime",
     "onCommand:docklite.openRuntimeSettings",
     "onCommand:docklite.refreshContainers",
@@ -52,6 +53,12 @@
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
+      {
+        "command": "docklite.startDockerRuntime",
+        "title": "Run Docker now",
+        "shortTitle": "Run",
+        "icon": "$(play)"
+      },
       {
         "command": "docklite.configureRuntime",
         "title": "Configure Runtime",
@@ -247,7 +254,7 @@
       ],
       "view/item/context": [
         {
-          "command": "docklite.configureRuntime",
+          "command": "docklite.startDockerRuntime",
           "when": "view == docklite.containers && viewItem == daemonStopped",
           "group": "inline@1"
         },

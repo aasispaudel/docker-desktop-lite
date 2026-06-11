@@ -11,6 +11,9 @@ import { VolumeDetailsPanel } from "./views/volumeDetailsPanel";
 
 let output: vscode.OutputChannel;
 const execFileAsync = promisify(execFile);
+const LAST_RUNTIME_KEY = "docklite.lastRuntimeId";
+const DOCKER_START_TIMEOUT_MS = 120_000;
+const DOCKER_START_POLL_MS = 2_000;
 
 export function activate(context: vscode.ExtensionContext): void {
   output = vscode.window.createOutputChannel("Docklite");
@@ -30,7 +33,13 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     vscode.commands.registerCommand("docklite.configureRuntime", async () => {
-      await configureRuntime(containers, context.extensionUri.fsPath);
+      await configureRuntime(containers, context, docker);
+    })
+  );
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand("docklite.startDockerRuntime", async () => {
+      await startDockerRuntime(containers, context, docker);
     })
   );
 
@@ -299,8 +308,13 @@ interface RuntimeOption {
   setupScriptKind?: "powershell" | "shell";
 }
 
-async function configureRuntime(containers: ContainerTreeProvider, extensionRoot: string): Promise<void> {
+async function configureRuntime(
+  containers: ContainerTreeProvider,
+  context: vscode.ExtensionContext,
+  docker: DockerClient
+): Promise<void> {
   const currentRuntimeId = await detectCurrentRuntimeId();
+  const extensionRoot = context.extensionUri.fsPath;
   const picked = await vscode.window.showQuickPick(
     runtimeOptions(extensionRoot).map((runtime) => ({
       label: formatRuntimeLabel(runtime, currentRuntimeId),
@@ -317,8 +331,83 @@ async function configureRuntime(containers: ContainerTreeProvider, extensionRoot
     return;
   }
 
-  await startRuntime(picked.runtime);
-  containers.refresh();
+  if (await startRuntime(picked.runtime, containers, docker)) {
+    await context.globalState.update(LAST_RUNTIME_KEY, picked.runtime.id);
+  }
+}
+
+async function startDockerRuntime(
+  containers: ContainerTreeProvider,
+  context: vscode.ExtensionContext,
+  docker: DockerClient
+): Promise<void> {
+  const extensionRoot = context.extensionUri.fsPath;
+  const runtimes = runtimeOptions(extensionRoot);
+  const currentRuntimeId = await detectCurrentRuntimeId();
+  const lastRuntimeId = context.globalState.get<string>(LAST_RUNTIME_KEY);
+  const preferredRuntime = firstRuntimeById(runtimes, [currentRuntimeId, lastRuntimeId]);
+
+  if (preferredRuntime && await commandExists(preferredRuntime.command)) {
+    if (await startRuntimeCommand(preferredRuntime, containers, docker)) {
+      await context.globalState.update(LAST_RUNTIME_KEY, preferredRuntime.id);
+    }
+    return;
+  }
+
+  const availableRuntimes: RuntimeOption[] = [];
+  for (const runtime of runtimes) {
+    if (await commandExists(runtime.command)) {
+      availableRuntimes.push(runtime);
+    }
+  }
+
+  if (availableRuntimes.length === 1) {
+    if (await startRuntimeCommand(availableRuntimes[0], containers, docker)) {
+      await context.globalState.update(LAST_RUNTIME_KEY, availableRuntimes[0].id);
+    }
+    return;
+  }
+
+  if (availableRuntimes.length > 1) {
+    const picked = await vscode.window.showQuickPick(
+      availableRuntimes.map((runtime) => ({
+        label: runtime.label,
+        description: runtime.description,
+        detail: runtime.detail,
+        runtime
+      })),
+      { placeHolder: "Choose the Docker runtime to start" }
+    );
+
+    if (!picked) {
+      return;
+    }
+
+    if (await startRuntimeCommand(picked.runtime, containers, docker)) {
+      await context.globalState.update(LAST_RUNTIME_KEY, picked.runtime.id);
+    }
+    return;
+  }
+
+  const accepted = await vscode.window.showWarningMessage(
+    "No installed Docker runtime command was found. Change Docker Engine to install or configure one.",
+    "Change Docker Engine"
+  );
+
+  if (accepted === "Change Docker Engine") {
+    await configureRuntime(containers, context, docker);
+  }
+}
+
+function firstRuntimeById(runtimes: RuntimeOption[], ids: Array<string | undefined>): RuntimeOption | undefined {
+  for (const id of ids) {
+    const runtime = id ? runtimes.find((candidate) => candidate.id === id) : undefined;
+    if (runtime) {
+      return runtime;
+    }
+  }
+
+  return undefined;
 }
 
 function formatRuntimeLabel(runtime: RuntimeOption, currentRuntimeId: string | undefined): string {
@@ -338,24 +427,62 @@ function formatRuntimeDetail(runtime: RuntimeOption, currentRuntimeId: string | 
   return runtime.detail;
 }
 
-async function startRuntime(runtime: RuntimeOption): Promise<void> {
+async function startRuntime(
+  runtime: RuntimeOption,
+  containers: ContainerTreeProvider,
+  docker: DockerClient
+): Promise<boolean> {
   if (runtime.setupScript) {
     if (await commandExists(runtime.command)) {
-      runRuntimeSetupScript(runtime);
-      return;
+      return startRuntimeCommand(runtime, containers, docker);
     }
 
     await offerRuntimeInstall(runtime);
-    return;
+    return false;
   }
 
+  return startRuntimeCommand(runtime, containers, docker);
+}
+
+async function startRuntimeCommand(
+  runtime: RuntimeOption,
+  containers: ContainerTreeProvider,
+  docker: DockerClient
+): Promise<boolean> {
   try {
     await execFileAsync(runtime.command, runtime.args);
-    vscode.window.showInformationMessage(`Started ${runtime.label}. Refresh Docklite if Docker is still warming up.`);
+    containers.setRuntimeStarting(`${runtime.label} is starting. Docklite will refresh automatically when Docker is ready.`);
+    await waitForDockerDaemon(docker);
+    containers.setRuntimeStarting(undefined);
+    containers.refresh();
+    vscode.window.showInformationMessage(`${runtime.label} is ready.`);
+    return true;
   } catch (error) {
+    containers.setRuntimeStarting(undefined);
+    containers.refresh();
     const message = error instanceof Error ? error.message : String(error);
     vscode.window.showWarningMessage(`Could not start ${runtime.label}. Run this manually: ${formatRuntimeCommand(runtime)}. ${message}`);
+    return false;
   }
+}
+
+async function waitForDockerDaemon(docker: DockerClient): Promise<void> {
+  const deadline = Date.now() + DOCKER_START_TIMEOUT_MS;
+
+  while (Date.now() < deadline) {
+    const daemon = await docker.daemonStatus();
+    if (daemon.running) {
+      return;
+    }
+
+    await delay(DOCKER_START_POLL_MS);
+  }
+
+  throw new Error("Docker opened, but the daemon did not become ready within 2 minutes.");
+}
+
+function delay(milliseconds: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
 async function offerRuntimeInstall(runtime: RuntimeOption): Promise<void> {

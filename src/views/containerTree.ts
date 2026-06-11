@@ -4,7 +4,7 @@ import { DockerClient, DockerContainer, DockerImage, DockerStatsSummary, DockerV
 type DockerLiteTreeItem =
   | ContainerRootTreeItem
   | DaemonStatusTreeItem
-  | ConfigureRuntimeTreeItem
+  | StartDockerTreeItem
   | ImageRootTreeItem
   | ImageTreeItem
   | MessageTreeItem
@@ -29,6 +29,7 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
   private readonly didChangeTreeData = new vscode.EventEmitter<DockerLiteTreeItem | undefined>();
   private loadError: string | undefined;
   private loading = false;
+  private runtimeStarting: string | undefined;
   private rootData: RootData | undefined;
 
   readonly onDidChangeTreeData = this.didChangeTreeData.event;
@@ -44,6 +45,11 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
     }
 
     void this.loadRootData();
+    this.didChangeTreeData.fire(undefined);
+  }
+
+  setRuntimeStarting(message: string | undefined): void {
+    this.runtimeStarting = message;
     this.didChangeTreeData.fire(undefined);
   }
 
@@ -86,10 +92,19 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
     }
 
     if (this.loadError) {
+      if (this.runtimeStarting) {
+        return [
+          new DaemonStatusTreeItem(false, this.loadError),
+          new MessageTreeItem("Starting Docker...", this.runtimeStarting, "loading"),
+          new SpacerTreeItem(),
+          new SettingsRootTreeItem()
+        ];
+      }
+
       return [
         new DaemonStatusTreeItem(false, this.loadError),
-        new ConfigureRuntimeTreeItem(),
-        new MessageTreeItem("Docker data hidden", "Start a Docker-compatible runtime, then refresh this view.", "info"),
+        new StartDockerTreeItem(),
+        new MessageTreeItem("Docker data hidden", "Start Docker, then refresh this view.", "info"),
         new SpacerTreeItem(),
         new SettingsRootTreeItem()
       ];
@@ -136,6 +151,7 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
       ]);
 
       this.rootData = { containers, images, summary, volumes };
+      this.runtimeStarting = undefined;
     } catch (error) {
       this.rootData = undefined;
       this.loadError = formatDockerError(error);
@@ -148,13 +164,13 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
 
 class DaemonStatusTreeItem extends vscode.TreeItem {
   constructor(running: boolean, error?: string) {
-    super(running ? "Docker daemon running" : "Docker daemon not running", vscode.TreeItemCollapsibleState.None);
+    super(running ? "Docker engine ready" : dockerUnavailableLabel(error), vscode.TreeItemCollapsibleState.None);
 
     this.contextValue = running ? "daemonRunning" : "daemonStopped";
-    this.description = running ? "" : recommendedRuntimeLabel();
+    this.description = "";
     this.tooltip = running
-      ? "Docker daemon is running."
-      : ["Docker daemon is not available.", error].filter(Boolean).join("\n");
+      ? "Docker engine is ready."
+      : [dockerUnavailableTooltip(error), error].filter(Boolean).join("\n");
     this.iconPath = new vscode.ThemeIcon(
       running ? "pass-filled" : "warning",
       new vscode.ThemeColor(running ? "testing.iconPassed" : "problemsWarningIcon.foreground")
@@ -162,17 +178,36 @@ class DaemonStatusTreeItem extends vscode.TreeItem {
   }
 }
 
-class ConfigureRuntimeTreeItem extends vscode.TreeItem {
-  constructor() {
-    super("Configure Runtime", vscode.TreeItemCollapsibleState.None);
+function dockerUnavailableLabel(error: string | undefined): string {
+  const lower = error?.toLowerCase() ?? "";
 
-    this.contextValue = "configureRuntime";
-    this.description = recommendedRuntimeLabel();
-    this.tooltip = `Choose how to start a Docker-compatible runtime. Recommended: ${recommendedRuntimeLabel()}.`;
-    this.iconPath = new vscode.ThemeIcon("settings-gear");
+  if (lower.includes("cli is unavailable") || lower.includes("command not found") || lower.includes("enoent")) {
+    return "Docker CLI unavailable";
+  }
+
+  return "Docker engine not ready";
+}
+
+function dockerUnavailableTooltip(error: string | undefined): string {
+  const lower = error?.toLowerCase() ?? "";
+
+  if (lower.includes("cli is unavailable") || lower.includes("command not found") || lower.includes("enoent")) {
+    return "Docker Desktop may be running, but Docklite cannot find the Docker CLI from VS Code.";
+  }
+
+  return "Docker Desktop can be open before its engine accepts Docker commands.";
+}
+
+class StartDockerTreeItem extends vscode.TreeItem {
+  constructor() {
+    super("Run Docker now", vscode.TreeItemCollapsibleState.None);
+
+    this.contextValue = "startDockerRuntime";
+    this.tooltip = "Start the Docker runtime that is already configured on this machine.";
+    this.iconPath = new vscode.ThemeIcon("play");
     this.command = {
-      command: "docklite.configureRuntime",
-      title: "Configure Runtime"
+      command: "docklite.startDockerRuntime",
+      title: "Run Docker now"
     };
   }
 }

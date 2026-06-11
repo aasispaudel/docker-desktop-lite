@@ -4,6 +4,13 @@ import { promisify } from "node:util";
 import * as vscode from "vscode";
 
 const execFileAsync = promisify(execFile);
+const DOCKER_COMMAND = "docker";
+const DOCKER_COMMAND_CANDIDATES = [
+  DOCKER_COMMAND,
+  "/usr/local/bin/docker",
+  "/opt/homebrew/bin/docker",
+  "/Applications/Docker.app/Contents/Resources/bin/docker"
+];
 
 export interface DockerContainer {
   id: string;
@@ -175,6 +182,8 @@ interface VolumeStatRow {
 }
 
 export class DockerClient {
+  private dockerCommand: string | undefined;
+
   constructor(private readonly output: vscode.OutputChannel) {}
 
   async daemonStatus(): Promise<{ error?: string; running: boolean }> {
@@ -661,10 +670,11 @@ export class DockerClient {
   }
 
   private async run(command: string, args: string[], showError = true, cwd?: string): Promise<string> {
-    this.output.appendLine(`> ${command} ${args.join(" ")}`);
+    const executable = await this.resolveCommand(command);
+    this.output.appendLine(`> ${executable} ${args.join(" ")}`);
 
     try {
-      const result = await execFileAsync(command, args, {
+      const result = await execFileAsync(executable, args, {
         cwd: cwd ?? vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
       });
 
@@ -678,7 +688,7 @@ export class DockerClient {
       return result.stdout;
     } catch (error) {
       const rawMessage = rawDockerErrorMessage(error);
-      const message = friendlyDockerErrorMessage(error, command, args);
+      const message = friendlyDockerErrorMessage(error, executable, args);
       this.output.appendLine(rawMessage);
       if (message !== rawMessage) {
         this.output.appendLine(`Friendly error: ${message}`);
@@ -691,10 +701,11 @@ export class DockerClient {
   }
 
   private async runCombinedOutput(command: string, args: string[]): Promise<string> {
-    this.output.appendLine(`> ${command} ${args.join(" ")}`);
+    const executable = await this.resolveCommand(command);
+    this.output.appendLine(`> ${executable} ${args.join(" ")}`);
 
     try {
-      const result = await execFileAsync(command, args, {
+      const result = await execFileAsync(executable, args, {
         cwd: vscode.workspace.workspaceFolders?.[0]?.uri.fsPath
       });
 
@@ -708,7 +719,7 @@ export class DockerClient {
       return [result.stdout, result.stderr].filter(Boolean).join("\n");
     } catch (error) {
       const rawMessage = rawDockerErrorMessage(error);
-      const message = friendlyDockerErrorMessage(error, command, args);
+      const message = friendlyDockerErrorMessage(error, executable, args);
       this.output.appendLine(rawMessage);
       if (message !== rawMessage) {
         this.output.appendLine(`Friendly error: ${message}`);
@@ -716,6 +727,31 @@ export class DockerClient {
       vscode.window.showErrorMessage(message);
       throw new Error(message);
     }
+  }
+
+  private async resolveCommand(command: string): Promise<string> {
+    if (command !== DOCKER_COMMAND) {
+      return command;
+    }
+
+    if (this.dockerCommand) {
+      return this.dockerCommand;
+    }
+
+    for (const candidate of DOCKER_COMMAND_CANDIDATES) {
+      try {
+        await execFileAsync(candidate, ["--version"]);
+        this.dockerCommand = candidate;
+        if (candidate !== DOCKER_COMMAND) {
+          this.output.appendLine(`Using Docker CLI at ${candidate}`);
+        }
+        return candidate;
+      } catch {
+        // Try the next common Docker Desktop/Homebrew location.
+      }
+    }
+
+    return DOCKER_COMMAND;
   }
 }
 
