@@ -1,7 +1,7 @@
 ---
-name: Suggest improvement
+name: User requests
 about: Suggest an enhancement, report a bug, or request a feature for Docklite
-title: "[Suggestion] "
+title: "[Request] "
 labels: enhancement
 assignees: ""
 ---

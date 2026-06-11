@@ -16,7 +16,7 @@ type DockerLiteTreeItem =
   | SettingsRootTreeItem
   | ChangeDockerEngineTreeItem
   | RuntimeSettingsTreeItem
-  | SuggestImprovementTreeItem
+  | UserRequestsTreeItem
   | SpacerTreeItem;
 
 interface RootData {
@@ -85,7 +85,7 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
       return [
         new ChangeDockerEngineTreeItem(),
         new RuntimeSettingsTreeItem(),
-        new SuggestImprovementTreeItem()
+        new UserRequestsTreeItem()
       ];
     }
 
@@ -254,16 +254,16 @@ class RuntimeSettingsTreeItem extends vscode.TreeItem {
   }
 }
 
-class SuggestImprovementTreeItem extends vscode.TreeItem {
+class UserRequestsTreeItem extends vscode.TreeItem {
   constructor() {
-    super("Suggest improvement", vscode.TreeItemCollapsibleState.None);
+    super("Request feature or improvement", vscode.TreeItemCollapsibleState.None);
 
-    this.contextValue = "suggestImprovement";
-    this.tooltip = "Open a prefilled GitHub issue for Docklite feedback.";
+    this.contextValue = "userRequests";
+    this.tooltip = "Open a prefilled GitHub issue for Docklite requests.";
     this.iconPath = new vscode.ThemeIcon("comment-discussion");
     this.command = {
-      command: "docklite.suggestImprovement",
-      title: "Suggest improvement"
+      command: "docklite.openUserRequests",
+      title: "Request feature or improvement"
     };
   }
 }

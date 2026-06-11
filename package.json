@@ -36,7 +36,7 @@
     "onCommand:docklite.startDockerRuntime",
     "onCommand:docklite.configureRuntime",
     "onCommand:docklite.openRuntimeSettings",
-    "onCommand:docklite.suggestImprovement",
+    "onCommand:docklite.openUserRequests",
     "onCommand:docklite.refreshContainers",
     "onCommand:docklite.openContainerDetails",
     "onCommand:docklite.confirmDeleteContainer",
@@ -73,9 +73,9 @@
         "icon": "$(settings)"
       },
       {
-        "command": "docklite.suggestImprovement",
-        "title": "Docklite: Suggest improvement",
-        "shortTitle": "Suggest",
+        "command": "docklite.openUserRequests",
+        "title": "Docklite: Request feature or improvement",
+        "shortTitle": "Requests",
         "icon": "$(comment-discussion)"
       },
       {

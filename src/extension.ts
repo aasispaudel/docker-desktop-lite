@@ -14,7 +14,7 @@ const execFileAsync = promisify(execFile);
 const LAST_RUNTIME_KEY = "docklite.lastRuntimeId";
 const DOCKER_START_TIMEOUT_MS = 120_000;
 const DOCKER_START_POLL_MS = 2_000;
-const SUGGEST_IMPROVEMENT_URL = "https://github.com/aasispaudel/docker-desktop-lite/issues/new?template=suggest-improvement.md";
+const USER_REQUESTS_URL = "https://github.com/aasispaudel/docker-desktop-lite/issues/new?template=user-requests.md";
 
 export function activate(context: vscode.ExtensionContext): void {
   output = vscode.window.createOutputChannel("Docklite");
@@ -51,8 +51,8 @@ export function activate(context: vscode.ExtensionContext): void {
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("docklite.suggestImprovement", async () => {
-      await vscode.env.openExternal(vscode.Uri.parse(SUGGEST_IMPROVEMENT_URL));
+    vscode.commands.registerCommand("docklite.openUserRequests", async () => {
+      await vscode.env.openExternal(vscode.Uri.parse(USER_REQUESTS_URL));
     })
   );
 
