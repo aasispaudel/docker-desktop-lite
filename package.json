@@ -36,6 +36,7 @@
     "onCommand:docklite.startDockerRuntime",
     "onCommand:docklite.configureRuntime",
     "onCommand:docklite.openRuntimeSettings",
+    "onCommand:docklite.suggestImprovement",
     "onCommand:docklite.refreshContainers",
     "onCommand:docklite.openContainerDetails",
     "onCommand:docklite.confirmDeleteContainer",
@@ -70,6 +71,12 @@
         "title": "Docklite: Runtime Settings",
         "shortTitle": "Settings",
         "icon": "$(settings)"
+      },
+      {
+        "command": "docklite.suggestImprovement",
+        "title": "Docklite: Suggest improvement",
+        "shortTitle": "Suggest",
+        "icon": "$(comment-discussion)"
       },
       {
         "command": "docklite.refreshContainers",

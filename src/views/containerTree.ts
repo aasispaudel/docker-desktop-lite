@@ -16,6 +16,7 @@ type DockerLiteTreeItem =
   | SettingsRootTreeItem
   | ChangeDockerEngineTreeItem
   | RuntimeSettingsTreeItem
+  | SuggestImprovementTreeItem
   | SpacerTreeItem;
 
 interface RootData {
@@ -83,7 +84,8 @@ export class ContainerTreeProvider implements vscode.TreeDataProvider<DockerLite
     if (element instanceof SettingsRootTreeItem) {
       return [
         new ChangeDockerEngineTreeItem(),
-        new RuntimeSettingsTreeItem()
+        new RuntimeSettingsTreeItem(),
+        new SuggestImprovementTreeItem()
       ];
     }
 
@@ -248,6 +250,20 @@ class RuntimeSettingsTreeItem extends vscode.TreeItem {
     this.command = {
       command: "docklite.openRuntimeSettings",
       title: "Runtime Settings"
+    };
+  }
+}
+
+class SuggestImprovementTreeItem extends vscode.TreeItem {
+  constructor() {
+    super("Suggest improvement", vscode.TreeItemCollapsibleState.None);
+
+    this.contextValue = "suggestImprovement";
+    this.tooltip = "Open a prefilled GitHub issue for Docklite feedback.";
+    this.iconPath = new vscode.ThemeIcon("comment-discussion");
+    this.command = {
+      command: "docklite.suggestImprovement",
+      title: "Suggest improvement"
     };
   }
 }
