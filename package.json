@@ -322,8 +322,9 @@
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
     "package": "vsce package",
+    "out": "tsc -p ./ && vsce package",
     "lint": "eslint src --ext ts"
-  },
+    },
   "devDependencies": {
     "@types/node": "^20.14.8",
     "@types/vscode": "^1.90.0",
